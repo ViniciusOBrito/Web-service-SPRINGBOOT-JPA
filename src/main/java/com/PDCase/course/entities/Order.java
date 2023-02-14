@@ -8,7 +8,9 @@ import java.util.Set;
 
 import com.PDCase.course.entities.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,9 +33,10 @@ public class Order implements Serializable{
 	
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'",timezone = "GMT")
 	private Instant moment;
-	
+		
 	private Integer orderStatus;
 	
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "client_id")
 	private User client;
@@ -40,6 +44,9 @@ public class Order implements Serializable{
 	
 	@OneToMany(mappedBy = "id.order")
 	private Set<OrderItem> items = new HashSet<>();
+	
+	@OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+	private Payment payment;
 
 	public Order() {
 	}
@@ -86,6 +93,22 @@ public class Order implements Serializable{
 	
 	public Set<OrderItem> getItems(){
 		return items;
+	}
+	
+	public void setPayment(Payment payment) {
+		this.payment = payment;
+	}
+	
+	public Payment getPayment() {
+		return payment;
+	}
+	
+	public Double getTotal() {
+		double sum = 0;
+		for(OrderItem x: items) {
+			sum += x.getSubTotal();
+		}
+		return sum;
 	}
 	
 	@Override
